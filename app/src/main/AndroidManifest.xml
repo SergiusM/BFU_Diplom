@@ -13,14 +13,26 @@
         android:theme="@style/Theme.Test_for_diplom"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".LoginActivity"
+            android:exported="false" />
+        <!-- SplashActivity (главный экран) -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity> <!-- Основные активности -->
+        <activity
+            android:name=".Activity_one"
+            android:exported="false"
+            android:theme="@style/Theme.Test_for_diplom" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
