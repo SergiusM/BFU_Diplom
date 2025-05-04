@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/scheduleFragment"
+            android:icon="@drawable/ic_calendar"
+            android:title="Расписание"/>
+        <item
+            android:id="@+id/aiChatFragment"
+            android:icon="@drawable/ic_ai"
+            android:title="Чат с ИИ"/>
+        <item
+            android:id="@+id/materialsFragment"
+            android:icon="@drawable/ic_library_books"
+            android:title="Материалы"/>
+        <item
+            android:id="@+id/profileFragment"
+            android:icon="@drawable/ic_person"
+            android:title="Профиль"/>
+    </group>
+</menu>

@@ -73,7 +73,7 @@ class LoginActivity : AppCompatActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     handleRememberMe(rememberMe)
-                    startActivity(Intent(this, Activity_one::class.java).apply {
+                    startActivity(Intent(this, Activity_Frag::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     })
                     finish()
@@ -103,7 +103,7 @@ class LoginActivity : AppCompatActivity() {
         super.onStart()
         val sharedPref = getSharedPreferences("login_prefs", MODE_PRIVATE)
         if (sharedPref.getBoolean("remember_me", false) && auth.currentUser != null) {
-            startActivity(Intent(this, Activity_one::class.java))
+            startActivity(Intent(this, Activity_Frag::class.java))
             finish()
         }
     }

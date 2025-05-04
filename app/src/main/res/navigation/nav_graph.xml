@@ -3,26 +3,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
-
+    app:startDestination="@id/scheduleFragment">
     <fragment
-        android:id="@+id/FirstFragment"
-        android:name="com.example.test_for_diplom.FirstFragment"
-        android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
-
-        <action
-            android:id="@+id/action_FirstFragment_to_SecondFragment"
-            app:destination="@id/SecondFragment" />
-    </fragment>
+        android:id="@+id/scheduleFragment"
+        android:name="com.example.test_for_diplom.ScheduleFragment"
+        android:label="ScheduleFragmen"
+        tools:layout="@layout/schedule_fragment" />
     <fragment
-        android:id="@+id/SecondFragment"
-        android:name="com.example.test_for_diplom.SecondFragment"
-        android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
-
-        <action
-            android:id="@+id/action_SecondFragment_to_FirstFragment"
-            app:destination="@id/FirstFragment" />
-    </fragment>
+        android:id="@+id/aiChatFragment"
+        android:name="com.example.test_for_diplom.AiChatFragment"
+        android:label="ai_chat_fragment"
+        tools:layout="@layout/ai_chat_fragment" />
+    <fragment
+        android:id="@+id/materialsFragment"
+        android:name="com.example.test_for_diplom.MaterialsFragment"
+        android:label="fragment_materials"
+        tools:layout="@layout/fragment_materials" />
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.test_for_diplom.ProfileFragment"
+        android:label="fragment_profile"
+        tools:layout="@layout/fragment_profile" />
 </navigation>

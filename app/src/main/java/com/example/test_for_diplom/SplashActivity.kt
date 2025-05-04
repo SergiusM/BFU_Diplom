@@ -55,7 +55,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun navigateToMain() {
-        startActivity(Intent(this, Activity_one::class.java).apply {
+        startActivity(Intent(this, Activity_Frag::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
     }

@@ -88,13 +88,13 @@ class MainActivity : AppCompatActivity() {
             }?.addOnFailureListener {
                 showToast("Ошибка профиля: ${it.message}")
             }?.addOnSuccessListener {
-                navigateToActivityOne() // Изменено на переход в Activity_one
+                navigateToActivityFrag() // Изменено на переход в Activity_Frag
             }
     }
 
     // Новый метод для перехода в основное Activity
-    private fun navigateToActivityOne() {
-        startActivity(Intent(this, Activity_one::class.java))
+    private fun navigateToActivityFrag() {
+        startActivity(Intent(this, Activity_Frag::class.java))
         finish()
     }
 
