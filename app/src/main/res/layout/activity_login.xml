@@ -9,30 +9,39 @@
     android:padding="24dp"
     tools:context=".LoginActivity">
 
-    <!-- Логотип приложения -->
-    <ImageView
-        android:id="@+id/logo"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_marginBottom="32dp"
-        android:contentDescription="Логотип приложения"
-        android:src="@mipmap/ic_app_logo_v1"
+    <!-- Логотип приложения в CardView -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/logoCard"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:layout_marginTop="32dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/app_logo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@mipmap/ic_bfu_logo"/>.
+    </androidx.cardview.widget.CardView>
 
     <!-- Заголовок -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="Добро пожаловать!"
         android:textColor="@color/primaryDark"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/logo" />
+        app:layout_constraintTop_toBottomOf="@id/logoCard" />
 
     <!-- Поле email -->
     <com.google.android.material.textfield.TextInputLayout
@@ -47,12 +56,11 @@
         app:layout_constraintTop_toBottomOf="@id/title"
         app:shapeAppearanceOverlay="@style/RoundedInput">
 
-        <!-- Исправлено: TextInputEditText с правильным ID -->
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/emailEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textEmailAddress"/>
+            android:inputType="textEmailAddress" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Поле пароля -->
@@ -63,18 +71,17 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:hint="Пароль"
+        app:endIconMode="password_toggle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/emailInputLayout"
-        app:endIconMode="password_toggle"
         app:shapeAppearanceOverlay="@style/RoundedInput">
 
-        <!-- Исправлено: TextInputEditText с правильным ID -->
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/passwordEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword"/>
+            android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Чекбокс "Запомнить меня" -->
@@ -93,7 +100,7 @@
         android:id="@+id/loginButton"
         android:layout_width="0dp"
         android:layout_height="56dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:text="Войти"
         android:textAllCaps="false"
         android:textSize="18sp"

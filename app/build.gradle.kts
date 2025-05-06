@@ -62,5 +62,6 @@ dependencies {
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
+    implementation ("com.google.firebase:firebase-database:20.0.0")
     implementation ("com.google.android.material:material:1.9.0")
 }

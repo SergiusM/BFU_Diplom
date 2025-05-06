@@ -6,6 +6,7 @@ import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.test_for_diplom.databinding.ActivityMainBinding
+import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.database.FirebaseDatabase
@@ -43,9 +44,9 @@ class MainActivity : AppCompatActivity() {
 
     // Остальной код без изменений
     private fun validateAndRegister() {
-        val email = binding.email.text.toString().trim()
-        val password = binding.password.text.toString().trim()
-        val repeatPassword = binding.repeatPassword.text.toString().trim()
+        val email = binding.emailEditText.text.toString().trim()
+        val password = binding.passwordEditText.text.toString().trim()
+        val repeatPassword = binding.repeatPasswordEditText.text.toString().trim()
 
         when {
             email.isEmpty() -> showError(binding.email, "Введите email")
@@ -56,6 +57,11 @@ class MainActivity : AppCompatActivity() {
             password != repeatPassword -> showError(binding.repeatPassword, "Пароли не совпадают")
             else -> performRegistration(email, password)
         }
+    }
+
+    private fun showError(field: TextInputLayout, message: String) {
+        field.error = message
+        field.requestFocus()
     }
 
     private fun performRegistration(email: String, password: String) {
