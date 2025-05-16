@@ -2,6 +2,7 @@ package com.example.test_for_diplom
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -10,27 +11,30 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.ktx.Firebase
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
     private lateinit var auth: FirebaseAuth
-    private lateinit var database: FirebaseDatabase // Добавляем ссылку на базу данных
+    private lateinit var database: FirebaseDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseAuth.getInstance().setLanguageCode("ru") // Установка локали
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         auth = Firebase.auth
-        database = FirebaseDatabase.getInstance() // Инициализируем базу данных
+        database = FirebaseDatabase.getInstance()
         setupUI()
     }
 
     private fun setupUI() {
         binding.loginButton.setOnClickListener {
-            // Правильные ID элементов
             val email = binding.emailEditText.text.toString().trim()
             val password = binding.passwordEditText.text.toString().trim()
             val rememberMe = binding.rememberMe.isChecked
@@ -41,11 +45,10 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.registerLink.setOnClickListener {
-            // Исправлено: добавлена закрывающая скобка для apply
             startActivity(Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            }) // Добавлена недостающая скобка
-        } // Исправлено: закрытие блока setOnClickListener
+            })
+        }
     }
 
     private fun validateInput(email: String, password: String): Boolean {
@@ -75,14 +78,67 @@ class LoginActivity : AppCompatActivity() {
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
                     handleRememberMe(rememberMe)
-                    startActivity(Intent(this, Activity_Frag::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    })
-                    finish()
+                    checkProfileCompletion()
                 } else {
                     handleLoginError(task.exception)
                 }
             }
+    }
+
+    private fun checkProfileCompletion() {
+        val userId = auth.currentUser?.uid ?: run {
+            Toast.makeText(this, "Ошибка: пользователь не авторизован", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val userRef = database.reference.child("users").child(userId)
+        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                Log.d("LoginDebug", "Данные профиля: ${snapshot.value}")
+
+                if (!snapshot.exists()) {
+                    createUserProfile(userId) // Создаем профиль, если его нет
+                    return
+                }
+
+                val profileCompleted = snapshot.child("profileCompleted").getValue(Boolean::class.java) ?: false
+                navigateToActivity(
+                    if (profileCompleted) Activity_Frag::class.java
+                    else ProfileSetupActivity::class.java
+                )
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Ошибка чтения данных: ${error.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                navigateToActivity(Activity_Frag::class.java)
+            }
+        })
+    }
+
+    private fun createUserProfile(userId: String) {
+        database.reference.child("users").child(userId).child("profileCompleted").setValue(false)
+            .addOnSuccessListener {
+                navigateToActivity(ProfileSetupActivity::class.java)
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(
+                    this@LoginActivity,
+                    "Ошибка создания профиля: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                navigateToActivity(Activity_Frag::class.java)
+            }
+    }
+
+    private fun navigateToActivity(activityClass: Class<*>) {
+        startActivity(Intent(this, activityClass).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
+        finish()
     }
 
     private fun handleLoginError(exception: Exception?) {
@@ -95,7 +151,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun handleRememberMe(rememberMe: Boolean) {
-        // Оптимизировано использование SharedPreferences
         getSharedPreferences("login_prefs", MODE_PRIVATE).edit()
             .putBoolean("remember_me", rememberMe)
             .apply()
@@ -105,8 +160,7 @@ class LoginActivity : AppCompatActivity() {
         super.onStart()
         val sharedPref = getSharedPreferences("login_prefs", MODE_PRIVATE)
         if (sharedPref.getBoolean("remember_me", false) && auth.currentUser != null) {
-            startActivity(Intent(this, Activity_Frag::class.java))
-            finish()
+            navigateToActivity(Activity_Frag::class.java)
         }
     }
 }

@@ -2,51 +2,70 @@ package com.example.test_for_diplom
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.example.test_for_diplom.databinding.ActivityFragBinding
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.navigation.NavigationView
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.appcompat.app.ActionBarDrawerToggle
 
 class Activity_Frag : AppCompatActivity() {
-    private lateinit var binding: ActivityFragBinding
-    private lateinit var appBarConfiguration: AppBarConfiguration
-    private lateinit var navController: NavController
+
+    private lateinit var drawerLayout: DrawerLayout
+    private lateinit var toggle: ActionBarDrawerToggle
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityFragBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        setContentView(R.layout.activity_frag)
 
-        // 1. Установите Toolbar как ActionBar
-        setSupportActionBar(binding.toolbar)
+        val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
 
-        // 2. Инициализация NavController
+        // Инициализация DrawerLayout
+        drawerLayout = findViewById(R.id.drawer_layout)
+
+        // Получаем NavHostFragment
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment_content_activity_frag) as NavHostFragment
-        navController = navHostFragment.navController
+        val navController = navHostFragment.navController
 
-        // 3. Настройка AppBarConfiguration
-        appBarConfiguration = AppBarConfiguration(
+        val navView = findViewById<NavigationView>(R.id.nav_view)
+
+        // Настройка AppBarConfiguration с DrawerLayout
+        val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.scheduleFragment,
                 R.id.aiChatFragment,
                 R.id.materialsFragment,
                 R.id.profileFragment
             ),
-            binding.drawerLayout
+            drawerLayout
         )
 
-        // 4. Свяжите ActionBar с NavController
+        // Связывание toolbar с NavController
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        // 5. Настройка NavigationView
-        binding.navView.setupWithNavController(navController)
+        // Связывание NavigationView с NavController
+        navView.setupWithNavController(navController)
+
+        // Настройка ActionBarDrawerToggle
+        toggle = ActionBarDrawerToggle(
+            this,
+            drawerLayout,
+            toolbar,
+            R.string.navigation_drawer_open,
+            R.string.navigation_drawer_close
+        )
+        drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment_content_activity_frag) as NavHostFragment
+        val navController = navHostFragment.navController
+        return navController.navigateUp() || super.onSupportNavigateUp()
     }
 }

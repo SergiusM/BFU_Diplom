@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "665174970559",
+    "firebase_url": "https://diplom-bfu-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "diplom-bfu",
     "storage_bucket": "diplom-bfu.firebasestorage.app"
   },

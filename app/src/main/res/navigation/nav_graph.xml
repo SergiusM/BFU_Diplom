@@ -4,24 +4,69 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/scheduleFragment">
+
     <fragment
         android:id="@+id/scheduleFragment"
         android:name="com.example.test_for_diplom.ScheduleFragment"
-        android:label="ScheduleFragmen"
-        tools:layout="@layout/schedule_fragment" />
+        android:label="Расписание"
+        tools:layout="@layout/schedule_fragment">
+        <action
+            android:id="@+id/action_schedule_to_aiChat"
+            app:destination="@id/aiChatFragment" />
+        <action
+            android:id="@+id/action_schedule_to_materials"
+            app:destination="@id/materialsFragment" />
+        <action
+            android:id="@+id/action_schedule_to_profile"
+            app:destination="@id/profileFragment" />
+    </fragment>
+
     <fragment
         android:id="@+id/aiChatFragment"
         android:name="com.example.test_for_diplom.AiChatFragment"
-        android:label="ai_chat_fragment"
-        tools:layout="@layout/ai_chat_fragment" />
+        android:label="Чат с ИИ"
+        tools:layout="@layout/ai_chat_fragment">
+        <action
+            android:id="@+id/action_aiChat_to_schedule"
+            app:destination="@id/scheduleFragment" />
+        <action
+            android:id="@+id/action_aiChat_to_materials"
+            app:destination="@id/materialsFragment" />
+        <action
+            android:id="@+id/action_aiChat_to_profile"
+            app:destination="@id/profileFragment" />
+    </fragment>
+
     <fragment
         android:id="@+id/materialsFragment"
         android:name="com.example.test_for_diplom.MaterialsFragment"
-        android:label="fragment_materials"
-        tools:layout="@layout/fragment_materials" />
+        android:label="Учебные материалы"
+        tools:layout="@layout/fragment_materials">
+        <action
+            android:id="@+id/action_materials_to_schedule"
+            app:destination="@id/scheduleFragment" />
+        <action
+            android:id="@+id/action_materials_to_aiChat"
+            app:destination="@id/aiChatFragment" />
+        <action
+            android:id="@+id/action_materials_to_profile"
+            app:destination="@id/profileFragment" />
+    </fragment>
+
     <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.test_for_diplom.ProfileFragment"
-        android:label="fragment_profile"
-        tools:layout="@layout/fragment_profile" />
+        android:label="Профиль"
+        tools:layout="@layout/fragment_profile">
+        <action
+            android:id="@+id/action_profile_to_schedule"
+            app:destination="@id/scheduleFragment" />
+        <action
+            android:id="@+id/action_profile_to_aiChat"
+            app:destination="@id/aiChatFragment" />
+        <action
+            android:id="@+id/action_profile_to_materials"
+            app:destination="@id/materialsFragment" />
+    </fragment>
+
 </navigation>

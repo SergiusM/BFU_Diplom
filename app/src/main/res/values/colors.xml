@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
     <color name="orange_dark">#FF8C00</color>
     <color name="orange">#FFD700</color>
     <color name="primaryColor">#6200EE</color>
     <color name="primaryDark">#3700B3</color>
+    <color name="primaryColor1">#3F51B5</color>
+    <color name="primaryDark1">#303F9F</color>
+    <color name="primaryLight">#C5CAE9</color>
+    <color name="white">#FFFFFF</color>
 </resources>

@@ -1,21 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/scheduleFragment"
             android:icon="@drawable/ic_calendar"
-            android:title="Расписание"/>
+            android:title="Расписание"
+            app:iconTint="@color/primaryDark" />
         <item
             android:id="@+id/aiChatFragment"
             android:icon="@drawable/ic_ai"
-            android:title="Чат с ИИ"/>
+            android:title="Чат с ИИ"
+            app:iconTint="@color/primaryDark" />
         <item
             android:id="@+id/materialsFragment"
             android:icon="@drawable/ic_library_books"
-            android:title="Материалы"/>
+            android:title="Учебные Материалы"
+            app:iconTint="@color/primaryDark" />
         <item
             android:id="@+id/profileFragment"
             android:icon="@drawable/ic_person"
-            android:title="Профиль"/>
+            android:title="Профиль"
+            app:iconTint="@color/primaryDark" />
     </group>
 </menu>

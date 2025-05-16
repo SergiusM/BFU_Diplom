@@ -51,7 +51,9 @@ class ProfileSetupActivity : AppCompatActivity() {
 
         userRef.updateChildren(profileData as Map<String, Any>)
             .addOnSuccessListener {
-                startActivity(Intent(this, MainActivity::class.java))
+                startActivity(Intent(this, Activity_Frag::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                })
                 finish()
             }
             .addOnFailureListener {
