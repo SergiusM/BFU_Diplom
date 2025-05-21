@@ -116,6 +116,7 @@ class AiChatFragment : Fragment() {
         _binding = AiChatFragmentBinding.inflate(inflater, container, false)
         return binding.root
     }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
@@ -152,7 +153,7 @@ class AiChatFragment : Fragment() {
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("https://192.168.0.71:5001/") // Обновлённый IP-адрес для физического устройства
+            .baseUrl("https://192.168.0.71:5001/") // Updated IP for physical device
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
@@ -189,9 +190,13 @@ class AiChatFragment : Fragment() {
                         // Scroll to the latest message
                         binding.chatRecyclerView.scrollToPosition(messages.size - 1)
                     }
+
                     override fun onFailure(call: Call<EmotionResponse>, t: Throwable) {
                         android.util.Log.d("AiChatFragment", "Error: ${t.message}")
-                        val customMessage = Message("Привет. Поздравляем! Ты заставил нашего бота хорошенько призадуматься. Пока что он не может дать отет на твой вопрос", isSent = false)
+                        val customMessage = Message(
+                            "Привет. Поздравляем! Ты заставил нашего бота хорошенько призадуматься. Пока что он не может дать ответ на твой вопрос",
+                            isSent = false
+                        )
                         messageAdapter.addMessage(customMessage)
                         // Scroll to the latest message
                         binding.chatRecyclerView.scrollToPosition(messages.size - 1)

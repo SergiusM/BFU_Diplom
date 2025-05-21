@@ -3,6 +3,7 @@ package com.example.test_for_diplom
 import android.content.Intent
 import android.os.Bundle
 import android.util.Patterns
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.test_for_diplom.databinding.ActivityMainBinding
@@ -26,10 +27,9 @@ class MainActivity : AppCompatActivity() {
         database = FirebaseDatabase.getInstance()
 
         setupRegistration()
-        setupLoginNavigation() // Добавляем обработчик для перехода на логин
+        setupLoginNavigation()
     }
 
-    // Новый метод для настройки перехода на экран входа
     private fun setupLoginNavigation() {
         binding.loginExistingAccountButton.setOnClickListener {
             navigateToLogin()
@@ -42,7 +42,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Остальной код без изменений
     private fun validateAndRegister() {
         val email = binding.emailEditText.text.toString().trim()
         val password = binding.passwordEditText.text.toString().trim()
@@ -75,13 +74,12 @@ class MainActivity : AppCompatActivity() {
                                     updateUserProfile(user.uid, user.email ?: "")
                                 } else {
                                     showToast("Ошибка отправки подтверждения: ${verificationTask.exception?.message}")
-                                    navigateToLogin() //+
-                                // Переход даже при ошибке верификации
+                                    updateUserProfile(user.uid, user.email ?: "") // Продолжаем даже при ошибке
                                 }
                             }
                     }
                 } else {
-                    showToast("Ошибка: ${task.exception?.message}")
+                    showToast("Ошибка регистрации: ${task.exception?.message}")
                 }
             }
     }
@@ -92,36 +90,38 @@ class MainActivity : AppCompatActivity() {
             ?.addOnCompleteListener {
                 saveUserToDatabase(userId, email)
             }?.addOnFailureListener {
-                showToast("Ошибка профиля: ${it.message}")
-            }?.addOnSuccessListener {
-                navigateToActivityFrag() // Изменено на переход в Activity_Frag
+                showToast("Ошибка обновления профиля: ${it.message}")
+                navigateToLogin()
             }
     }
 
-    // Новый метод для перехода в основное Activity
-    private fun navigateToActivityFrag() {
-        startActivity(Intent(this, Activity_Frag::class.java))
+    private fun saveUserToDatabase(userId: String, email: String) {
+        val user = User(
+            email = email,
+            createdAt = System.currentTimeMillis(),
+            profileCompleted = false // Добавляем флаг для профиля
+        )
+        database.reference.child("users").child(userId).setValue(user)
+            .addOnSuccessListener {
+                navigateToProfileSetup() // Переход в ProfileSetupActivity
+            }
+            .addOnFailureListener {
+                showToast("Ошибка сохранения в базе данных: ${it.message}")
+                navigateToLogin()
+            }
+    }
+
+    private fun navigateToProfileSetup() {
+        startActivity(Intent(this, ProfileSetupActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
         finish()
     }
 
-    // Старый метод для перехода к логину (используется только для кнопки)
     private fun navigateToLogin() {
         auth.signOut()
         startActivity(Intent(this, LoginActivity::class.java))
         finish()
-    }
-
-    private fun saveUserToDatabase(userId: String, email: String) {
-        val user = User(email, System.currentTimeMillis())
-        database.reference.child("users").child(userId).setValue(user)
-            .addOnFailureListener {
-                showToast("Ошибка базы данных: ${it.message}")
-            }
-    }
-
-    private fun showError(field: android.widget.EditText, message: String) {
-        field.error = message
-        field.requestFocus()
     }
 
     private fun showToast(message: String) {
@@ -130,6 +130,7 @@ class MainActivity : AppCompatActivity() {
 
     data class User(
         val email: String = "",
-        val createdAt: Long = 0
+        val createdAt: Long = 0,
+        val profileCompleted: Boolean = false // Добавлено поле
     )
 }
