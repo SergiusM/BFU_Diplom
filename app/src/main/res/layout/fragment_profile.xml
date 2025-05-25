@@ -34,33 +34,33 @@
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/fullNameTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="ФИО: "
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/studyFieldTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Направление: "
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/courseTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Курс: "
-                android:textSize="16sp" />
-
-
-            <Button
-                android:id="@+id/logout_button"
+            <EditText
+                android:id="@+id/fullNameEditText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Выйти из профиля"
+                android:hint="ФИО"
+                android:textSize="16sp" />
+
+            <Spinner
+                android:id="@+id/studyFieldSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edit_text_background"
+                android:textSize="16sp"
+                android:padding="12dp" />
+
+            <EditText
+                android:id="@+id/courseEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Курс"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/saveButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Сохранить изменения"
                 android:textColor="#FFFFFF"
                 android:backgroundTint="#6B48FF"
                 android:textSize="16sp"
@@ -68,5 +68,21 @@
                 android:layout_gravity="center" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
+
+    <!-- Кнопка выхода из профиля -->
+    <Button
+        android:id="@+id/logout_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Выйти из профиля"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#6B48FF"
+        android:textSize="16sp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -99,7 +99,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun navigateToRegistration() {
-        startActivity(Intent(this, MainActivity::class.java).apply {
+        startActivity(Intent(this, RegisterActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()

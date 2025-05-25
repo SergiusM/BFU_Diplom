@@ -2,34 +2,27 @@ package com.example.test_for_diplom
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.example.test_for_diplom.databinding.ActivityLoginBinding
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
-import com.google.firebase.auth.FirebaseAuthInvalidUserException
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.ktx.Firebase
+import com.google.android.material.textfield.TextInputLayout
+import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.gotrue.providers.builtin.Email
+import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 
 class LoginActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityLoginBinding
-    private lateinit var auth: FirebaseAuth
-    private lateinit var database: FirebaseDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        FirebaseAuth.getInstance().setLanguageCode("ru") // Установка локали
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        auth = Firebase.auth
-        database = FirebaseDatabase.getInstance()
         setupUI()
     }
 
@@ -45,7 +38,7 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.registerLink.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java).apply {
+            startActivity(Intent(this, RegisterActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             })
         }
@@ -54,84 +47,99 @@ class LoginActivity : AppCompatActivity() {
     private fun validateInput(email: String, password: String): Boolean {
         return when {
             email.isEmpty() -> {
-                binding.emailEditText.error = "Введите email"
+                showError(binding.emailInputLayout, "Введите email")
                 false
             }
             !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                binding.emailEditText.error = "Неверный формат email"
+                showError(binding.emailInputLayout, "Неверный формат email")
                 false
             }
             password.isEmpty() -> {
-                binding.passwordEditText.error = "Введите пароль"
+                showError(binding.passwordInputLayout, "Введите пароль")
                 false
             }
             password.length < 6 -> {
-                binding.passwordEditText.error = "Пароль должен содержать минимум 6 символов"
+                showError(binding.passwordInputLayout, "Пароль должен содержать минимум 6 символов")
                 false
             }
-            else -> true
+            else -> {
+                clearErrors()
+                true
+            }
         }
+    }
+
+    private fun showError(field: TextInputLayout, message: String) {
+        field.error = message
+        field.requestFocus()
+    }
+
+    private fun clearErrors() {
+        binding.emailInputLayout.error = null
+        binding.passwordInputLayout.error = null
     }
 
     private fun loginUser(email: String, password: String, rememberMe: Boolean) {
-        auth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    handleRememberMe(rememberMe)
-                    checkProfileCompletion()
-                } else {
-                    handleLoginError(task.exception)
+        lifecycleScope.launch {
+            try {
+                Supabase.client.auth.signInWith(Email) {
+                    this.email = email
+                    this.password = password
                 }
+                handleRememberMe(rememberMe)
+                checkProfileCompletion()
+            } catch (e: Exception) {
+                handleLoginError(e)
             }
+        }
     }
 
-    private fun checkProfileCompletion() {
-        val userId = auth.currentUser?.uid ?: run {
-            Toast.makeText(this, "Ошибка: пользователь не авторизован", Toast.LENGTH_SHORT).show()
+    private suspend fun checkProfileCompletion() {
+        val userId = Supabase.client.auth.currentUserOrNull()?.id ?: run {
+            showToast("Ошибка: пользователь не авторизован")
             return
         }
 
-        val userRef = database.reference.child("users").child(userId)
-        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                Log.d("LoginDebug", "Данные профиля: ${snapshot.value}")
+        try {
+            val result = Supabase.client.from("users").select {
+                filter { eq("id", userId) }
+            }.decodeSingleOrNull<User>()
 
-                if (!snapshot.exists()) {
-                    createUserProfile(userId) // Создаем профиль, если его нет
-                    return
-                }
-
-                val profileCompleted = snapshot.child("profileCompleted").getValue(Boolean::class.java) ?: false
+            if (result == null) {
+                createUserProfile(userId)
+            } else {
+                val profileCompleted = result.profileCompleted ?: false
                 navigateToActivity(
                     if (profileCompleted) Activity_Frag::class.java
                     else ProfileSetupActivity::class.java
                 )
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(
-                    this@LoginActivity,
-                    "Ошибка чтения данных: ${error.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                navigateToActivity(Activity_Frag::class.java)
-            }
-        })
+        } catch (e: Exception) {
+            showToast("Ошибка чтения данных: ${e.message}")
+            println("Ошибка проверки профиля: ${e.message}")
+            e.printStackTrace()
+            // В случае ошибки перенаправляем на ProfileSetupActivity
+            navigateToActivity(ProfileSetupActivity::class.java)
+        }
     }
 
-    private fun createUserProfile(userId: String) {
-        database.reference.child("users").child(userId).child("profileCompleted").setValue(false)
-            .addOnSuccessListener {
-                navigateToActivity(ProfileSetupActivity::class.java)
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(
-                    this@LoginActivity,
-                    "Ошибка создания профиля: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                navigateToActivity(Activity_Frag::class.java)
-            }
+    private suspend fun createUserProfile(userId: String) {
+        try {
+            Supabase.client.from("users").insert(
+                User(
+                    id = userId,
+                    email = Supabase.client.auth.currentUserOrNull()?.email ?: "",
+                    profileCompleted = false
+                )
+            )
+            navigateToActivity(ProfileSetupActivity::class.java)
+        } catch (e: Exception) {
+            showToast("Ошибка создания профиля: ${e.message}")
+            println("Ошибка создания профиля: ${e.message}")
+            e.printStackTrace()
+            // В случае ошибки перенаправляем на ProfileSetupActivity
+            navigateToActivity(ProfileSetupActivity::class.java)
+        }
     }
 
     private fun navigateToActivity(activityClass: Class<*>) {
@@ -141,13 +149,14 @@ class LoginActivity : AppCompatActivity() {
         finish()
     }
 
-    private fun handleLoginError(exception: Exception?) {
-        val errorMessage = when (exception) {
-            is FirebaseAuthInvalidUserException -> "Пользователь не найден"
-            is FirebaseAuthInvalidCredentialsException -> "Неверный пароль"
-            else -> "Ошибка авторизации: ${exception?.message ?: "Неизвестная ошибка"}"
+    private fun handleLoginError(exception: Exception) {
+        val errorMessage = when (exception.message?.contains("Invalid login credentials", ignoreCase = true)) {
+            true -> "Неверный email или пароль"
+            else -> "Ошибка авторизации: ${exception.message ?: "Неизвестная ошибка"}"
         }
-        Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+        showToast(errorMessage)
+        println("Ошибка логина: $errorMessage")
+        exception.printStackTrace()
     }
 
     private fun handleRememberMe(rememberMe: Boolean) {
@@ -159,8 +168,21 @@ class LoginActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         val sharedPref = getSharedPreferences("login_prefs", MODE_PRIVATE)
-        if (sharedPref.getBoolean("remember_me", false) && auth.currentUser != null) {
-            navigateToActivity(Activity_Frag::class.java)
+        if (sharedPref.getBoolean("remember_me", false) && Supabase.client.auth.currentUserOrNull() != null) {
+            lifecycleScope.launch {
+                checkProfileCompletion()
+            }
         }
     }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+    @Serializable
+    data class User(
+        val id: String,
+        val email: String,
+        val profileCompleted: Boolean? = null
+    )
 }
