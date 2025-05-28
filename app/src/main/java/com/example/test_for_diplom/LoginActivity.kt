@@ -10,9 +10,7 @@ import com.example.test_for_diplom.databinding.ActivityLoginBinding
 import com.google.android.material.textfield.TextInputLayout
 import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.gotrue.providers.builtin.Email
-import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 
 class LoginActivity : AppCompatActivity() {
 
@@ -23,7 +21,24 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Автозаполнение email, если remember_me включено
+        val sharedPref = getSharedPreferences("login_prefs", MODE_PRIVATE)
+        if (sharedPref.getBoolean("remember_me", false)) {
+            val savedEmail = sharedPref.getString("saved_email", null)
+            if (savedEmail != null) {
+                binding.emailEditText.setText(savedEmail)
+            }
+        }
+
         setupUI()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val sharedPref = getSharedPreferences("login_prefs", MODE_PRIVATE)
+        if (sharedPref.getBoolean("remember_me", false) && Supabase.client.auth.currentUserOrNull() != null) {
+            navigateToMain()
+        }
     }
 
     private fun setupUI() {
@@ -86,64 +101,16 @@ class LoginActivity : AppCompatActivity() {
                     this.email = email
                     this.password = password
                 }
-                handleRememberMe(rememberMe)
-                checkProfileCompletion()
+                handleRememberMe(rememberMe, email)
+                navigateToMain()
             } catch (e: Exception) {
                 handleLoginError(e)
             }
         }
     }
 
-    private suspend fun checkProfileCompletion() {
-        val userId = Supabase.client.auth.currentUserOrNull()?.id ?: run {
-            showToast("Ошибка: пользователь не авторизован")
-            return
-        }
-
-        try {
-            val result = Supabase.client.from("users").select {
-                filter { eq("id", userId) }
-            }.decodeSingleOrNull<User>()
-
-            if (result == null) {
-                createUserProfile(userId)
-            } else {
-                val profileCompleted = result.profileCompleted ?: false
-                navigateToActivity(
-                    if (profileCompleted) Activity_Frag::class.java
-                    else ProfileSetupActivity::class.java
-                )
-            }
-        } catch (e: Exception) {
-            showToast("Ошибка чтения данных: ${e.message}")
-            println("Ошибка проверки профиля: ${e.message}")
-            e.printStackTrace()
-            // В случае ошибки перенаправляем на ProfileSetupActivity
-            navigateToActivity(ProfileSetupActivity::class.java)
-        }
-    }
-
-    private suspend fun createUserProfile(userId: String) {
-        try {
-            Supabase.client.from("users").insert(
-                User(
-                    id = userId,
-                    email = Supabase.client.auth.currentUserOrNull()?.email ?: "",
-                    profileCompleted = false
-                )
-            )
-            navigateToActivity(ProfileSetupActivity::class.java)
-        } catch (e: Exception) {
-            showToast("Ошибка создания профиля: ${e.message}")
-            println("Ошибка создания профиля: ${e.message}")
-            e.printStackTrace()
-            // В случае ошибки перенаправляем на ProfileSetupActivity
-            navigateToActivity(ProfileSetupActivity::class.java)
-        }
-    }
-
-    private fun navigateToActivity(activityClass: Class<*>) {
-        startActivity(Intent(this, activityClass).apply {
+    private fun navigateToMain() {
+        startActivity(Intent(this, Activity_Frag::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()
@@ -159,30 +126,18 @@ class LoginActivity : AppCompatActivity() {
         exception.printStackTrace()
     }
 
-    private fun handleRememberMe(rememberMe: Boolean) {
-        getSharedPreferences("login_prefs", MODE_PRIVATE).edit()
-            .putBoolean("remember_me", rememberMe)
-            .apply()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        val sharedPref = getSharedPreferences("login_prefs", MODE_PRIVATE)
-        if (sharedPref.getBoolean("remember_me", false) && Supabase.client.auth.currentUserOrNull() != null) {
-            lifecycleScope.launch {
-                checkProfileCompletion()
-            }
+    private fun handleRememberMe(rememberMe: Boolean, email: String) {
+        val editor = getSharedPreferences("login_prefs", MODE_PRIVATE).edit()
+        editor.putBoolean("remember_me", rememberMe)
+        if (rememberMe) {
+            editor.putString("saved_email", email)
+        } else {
+            editor.remove("saved_email")
         }
+        editor.apply()
     }
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
-
-    @Serializable
-    data class User(
-        val id: String,
-        val email: String,
-        val profileCompleted: Boolean? = null
-    )
 }

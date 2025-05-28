@@ -1,52 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@drawable/gradient_background"
     android:padding="24dp"
     tools:context=".RegisterActivity">
 
     <!-- Логотип приложения -->
-
     <ImageView
         android:id="@+id/app_logo"
         android:layout_width="160dp"
         android:layout_height="160dp"
         android:layout_marginTop="32dp"
-        android:scaleType="centerCrop"
-        android:src="@mipmap/ic_bfu_logo"
-        android:elevation="8dp"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:src="@drawable/bfu_logo"
+        android:contentDescription="Логотип БФУ имени Иммануила Канта"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
-    <androidx.cardview.widget.CardView
-        android:layout_width="160dp"
-        android:layout_height="160dp"
-        android:layout_marginTop="32dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageView
-            android:id="@+id/app_logo_shadow"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@mipmap/ic_bfu_logo" />
-    </androidx.cardview.widget.CardView>
-
-
+    <!-- Приветствие -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/greet"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:text="Добро пожаловать!"
         android:textColor="@color/primaryDark"
         android:textSize="24sp"
@@ -61,42 +43,49 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="36dp"
+        android:layout_marginTop="32dp"
         android:hint="Укажите почту"
+        app:cardElevation="4dp"
+        app:cornerRadius="12dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/greet"
+        app:layout_constraintWidth_max="400dp"
         app:shapeAppearanceOverlay="@style/RoundedInput">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/emailEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textEmailAddress" />
+            android:inputType="textEmailAddress"
+            android:imeOptions="actionNext"
+            android:contentDescription="Поле ввода email" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Остальные элементы остаются без изменений -->
     <!-- Поле пароля -->
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/password"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="16dp"
         android:hint="Введите пароль"
+        app:cardElevation="4dp"
+        app:cornerRadius="12dp"
         app:endIconMode="password_toggle"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/email"
+        app:layout_constraintWidth_max="400dp"
         app:shapeAppearanceOverlay="@style/RoundedInput">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/passwordEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword" />
+            android:inputType="textPassword"
+            android:imeOptions="actionNext"
+            android:contentDescription="Поле ввода пароля" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Поле повторения пароля -->
@@ -105,20 +94,24 @@
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:hint="Повторите пароль"
+        app:cardElevation="4dp"
+        app:cornerRadius="12dp"
         app:endIconMode="password_toggle"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/password"
+        app:layout_constraintWidth_max="400dp"
         app:shapeAppearanceOverlay="@style/RoundedInput">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/repeatPasswordEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPassword" />
+            android:inputType="textPassword"
+            android:imeOptions="actionDone"
+            android:contentDescription="Поле повторения пароля" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Кнопка регистрации -->
@@ -126,16 +119,18 @@
         android:id="@+id/registerButton"
         android:layout_width="0dp"
         android:layout_height="56dp"
-        android:layout_marginTop="28dp"
+        android:layout_marginTop="32dp"
         android:text="Зарегистрироваться"
         android:textAllCaps="false"
         android:textSize="18sp"
         app:backgroundTint="@color/primaryColor"
-        app:cornerRadius="8dp"
+        app:cornerRadius="12dp"
+        app:cardElevation="4dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/repeatPassword" />
+        app:layout_constraintTop_toBottomOf="@id/repeatPassword"
+        app:layout_constraintWidth_max="400dp"
+        android:contentDescription="Кнопка регистрации" />
 
     <!-- Ссылка на вход -->
     <com.google.android.material.button.MaterialButton
@@ -143,11 +138,12 @@
         style="@style/Widget.MaterialComponents.Button.TextButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
         android:text="Уже есть аккаунт?"
         android:textColor="@color/primaryDark"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/registerButton" />
+        app:layout_constraintTop_toBottomOf="@id/registerButton"
+        android:contentDescription="Ссылка на вход в существующий аккаунт" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

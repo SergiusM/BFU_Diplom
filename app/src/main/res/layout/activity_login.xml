@@ -5,43 +5,37 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@drawable/gradient_background"
     android:padding="24dp"
     tools:context=".LoginActivity">
 
-    <!-- Логотип приложения в CardView -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/logoCard"
+    <!-- Логотип приложения -->
+    <ImageView
+        android:id="@+id/app_logo"
         android:layout_width="160dp"
         android:layout_height="160dp"
         android:layout_marginTop="32dp"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="8dp"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"
+        android:src="@drawable/bfu_logo"
+        android:contentDescription="Логотип приложения"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageView
-            android:id="@+id/app_logo"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            android:src="@mipmap/ic_bfu_logo"/>.
-    </androidx.cardview.widget.CardView>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Заголовок -->
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:text="Добро пожаловать!"
         android:textColor="@color/primaryDark"
         android:textSize="24sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/logoCard" />
+        app:layout_constraintTop_toBottomOf="@id/app_logo" />
 
     <!-- Поле email -->
     <com.google.android.material.textfield.TextInputLayout

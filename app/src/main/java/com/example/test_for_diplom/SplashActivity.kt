@@ -3,85 +3,66 @@ package com.example.test_for_diplom
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import androidx.lifecycle.lifecycleScope
+import com.example.test_for_diplom.databinding.ActivitySplashBinding
+import io.github.jan.supabase.gotrue.auth
+import kotlinx.coroutines.launch
 
 class SplashActivity : AppCompatActivity() {
 
-    private lateinit var auth: FirebaseAuth
-    private lateinit var database: FirebaseDatabase
-    private lateinit var progressBar: ProgressBar
+    private lateinit var binding: ActivitySplashBinding
     private lateinit var sharedPref: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_splash)
+        binding = ActivitySplashBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        auth = FirebaseAuth.getInstance()
-        database = FirebaseDatabase.getInstance()
         sharedPref = getSharedPreferences("login_prefs", MODE_PRIVATE)
-        progressBar = findViewById(R.id.progressBar)
-
         setupLoadingAnimation()
         checkAuthState()
     }
 
     private fun setupLoadingAnimation() {
-        progressBar.isVisible = true
-        progressBar.isIndeterminate = true
+        binding.progressBar.isVisible = true
+        binding.progressBar.isIndeterminate = true
     }
 
     private fun checkAuthState() {
-        val user = auth.currentUser
-        val rememberMe = sharedPref.getBoolean("remember_me", false)
+        lifecycleScope.launch {
+            try {
+                val user = Supabase.client.auth.currentUserOrNull()
+                val rememberMe = sharedPref.getBoolean("remember_me", false)
 
-        when {
-            // Пользователь авторизован и включен автовход
-            user != null && rememberMe -> {
-                checkProfileCompletion(user.uid)
-            }
+                println("SplashActivity: user=${user?.id}, remember_me=$rememberMe")
 
-            // Пользователь авторизован, но выключен автовход
-            user != null -> {
-                navigateToLogin()
-            }
-
-            // Новый пользователь
-            else -> {
+                when {
+                    user != null -> {
+                        // Пользователь авторизован, перенаправляем в Activity_Frag
+                        navigateToMain()
+                    }
+                    rememberMe -> {
+                        // Сессия истекла, но remember_me включено, перенаправляем в LoginActivity
+                        navigateToLogin()
+                    }
+                    else -> {
+                        // Пользователь не авторизован, перенаправляем в RegisterActivity
+                        navigateToRegistration()
+                    }
+                }
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@SplashActivity,
+                    "Ошибка проверки авторизации: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+                println("SplashActivity: ошибка проверки авторизации: ${e.message}")
                 navigateToRegistration()
             }
         }
-    }
-
-    private fun checkProfileCompletion(userId: String) {
-        database.reference.child("users").child(userId)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val profileCompleted = snapshot.child("profileCompleted").getValue(Boolean::class.java) ?: false
-
-                    if (profileCompleted) {
-                        navigateToMain()
-                    } else {
-                        navigateToProfileSetup()
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(
-                        this@SplashActivity,
-                        "Ошибка загрузки данных профиля",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    navigateToLogin()
-                }
-            })
     }
 
     private fun navigateToMain() {
@@ -100,13 +81,6 @@ class SplashActivity : AppCompatActivity() {
 
     private fun navigateToRegistration() {
         startActivity(Intent(this, RegisterActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        })
-        finish()
-    }
-
-    private fun navigateToProfileSetup() {
-        startActivity(Intent(this, ProfileSetupActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })
         finish()

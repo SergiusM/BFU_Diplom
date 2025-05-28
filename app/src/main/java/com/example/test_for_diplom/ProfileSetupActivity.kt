@@ -2,6 +2,7 @@ package com.example.test_for_diplom
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.Toast
@@ -46,31 +47,28 @@ class ProfileSetupActivity : AppCompatActivity() {
         val studyFields = arrayOf(
             "Прикладная математика и информатика",
             "Информационные системы и технологии",
-            "Информационая безопасность",
+            "Информационная безопасность",
             "Математическое обеспечение"
         )
 
         val adapter = ArrayAdapter(
             this,
-            android.R.layout.simple_spinner_item,
+            R.layout.dropdown_menu_popup_item, // Используйте кастомный layout для выпадающего меню
             studyFields
         )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.studyFieldSpinner.adapter = adapter
+        binding.studyFieldSpinner.setAdapter(adapter)
     }
 
     private fun saveProfileData() {
         val fullName = binding.fullNameEditText.text.toString().trim()
-        val studyField = binding.studyFieldSpinner.selectedItem.toString()
+        val studyField = binding.studyFieldSpinner.text.toString().trim()
         val course = binding.courseEditText.text.toString().trim()
 
-        // Проверка на пустые поля
         if (fullName.isEmpty() || studyField.isEmpty() || course.isEmpty()) {
             Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Проверка валидности курса
         val courseNumber = course.toIntOrNull()
         if (courseNumber == null) {
             Toast.makeText(this, "Курс должен быть числом", Toast.LENGTH_SHORT).show()
@@ -81,6 +79,7 @@ class ProfileSetupActivity : AppCompatActivity() {
             return
         }
 
+        binding.progressBar.visibility = View.VISIBLE // Показать индикатор
         lifecycleScope.launch {
             try {
                 val user = Supabase.client.auth.currentUserOrNull()
@@ -105,7 +104,6 @@ class ProfileSetupActivity : AppCompatActivity() {
                     profileCompleted = true
                 )
 
-                println("Сохранение профиля: $userProfile")
                 Supabase.client.from("users").upsert(userProfile)
                 Toast.makeText(this@ProfileSetupActivity, "Профиль успешно сохранен", Toast.LENGTH_SHORT).show()
                 startActivity(Intent(this@ProfileSetupActivity, Activity_Frag::class.java).apply {
@@ -116,6 +114,8 @@ class ProfileSetupActivity : AppCompatActivity() {
                 Toast.makeText(this@ProfileSetupActivity, "Ошибка сохранения: ${e.message}", Toast.LENGTH_SHORT).show()
                 println("Ошибка сохранения профиля: ${e.message}")
                 e.printStackTrace()
+            } finally {
+                binding.progressBar.visibility = View.GONE // Скрыть индикатор
             }
         }
     }

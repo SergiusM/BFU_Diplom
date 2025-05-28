@@ -1,3 +1,4 @@
+@file:OptIn(InternalSerializationApi::class)
 package com.example.test_for_diplom
 
 import android.content.Intent
@@ -12,6 +13,7 @@ import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.gotrue.providers.builtin.Email
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.Serializable
 
 class RegisterActivity : AppCompatActivity() {
