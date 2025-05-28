@@ -74,5 +74,14 @@ dependencies {
     implementation ("com.google.android.material:material:1.12.0")
     implementation ("androidx.recyclerview:recyclerview:1.3.2")
     implementation ("androidx.constraintlayout:constraintlayout:2.1.4")
-
+    // Firebase
+    implementation ("com.google.firebase:firebase-database:20.3.0")
+    implementation ("com.google.firebase:firebase-auth:22.3.0")
+    implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-database-ktx")
+    implementation ("com.google.firebase:firebase-database:20.0.0")
+    implementation ("com.google.android.material:material:1.9.0")
 }

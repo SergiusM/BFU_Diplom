@@ -1,3 +1,4 @@
+@file:OptIn(InternalSerializationApi::class)
 package com.example.test_for_diplom
 
 import android.content.Intent
@@ -13,21 +14,18 @@ import com.example.test_for_diplom.databinding.FragmentProfileBinding
 import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import com.example.test_for_diplom.Program
+
 
 class ProfileFragment : Fragment() {
 
     private var _binding: FragmentProfileBinding? = null
     private val binding get() = _binding!!
 
-    // Список направлений
-    private val studyFields = arrayOf(
-        "Прикладная математика и информатика",
-        "Информационные системы и технологии",
-        "Информационая безопасность",
-        "Математическое обеспечение"
-    )
+    private var programs: List<Program> = emptyList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -40,18 +38,13 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Настройка Spinner для направлений
-        setupStudyFieldSpinner()
+        // Загрузка направлений и профиля
+        loadProgramsAndProfile()
 
-        // Загрузка данных профиля
-        loadStudentData()
-
-        // Обработка нажатия на кнопку "Сохранить изменения"
         binding.saveButton.setOnClickListener {
             saveProfileChanges()
         }
 
-        // Обработка нажатия на кнопку "Выйти из профиля"
         binding.logoutButton.setOnClickListener {
             lifecycleScope.launch {
                 try {
@@ -62,83 +55,37 @@ class ProfileFragment : Fragment() {
                     requireActivity().finish()
                 } catch (e: Exception) {
                     Toast.makeText(requireContext(), "Ошибка выхода: ${e.message}", Toast.LENGTH_SHORT).show()
-                    println("Ошибка выхода: ${e.message}")
-                    e.printStackTrace()
                 }
             }
         }
     }
 
-    /** Настройка Spinner для выбора направления */
-    private fun setupStudyFieldSpinner() {
-        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, studyFields)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.studyFieldSpinner.adapter = adapter
-    }
-
-    /** Загрузка данных студента */
-    private fun loadStudentData() {
+    private fun loadProgramsAndProfile() {
         lifecycleScope.launch {
             try {
-                val user = Supabase.client.auth.currentUserOrNull()
-                if (user == null) {
-                    Toast.makeText(requireContext(), "Пользователь не аутентифицирован", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(requireContext(), LoginActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    })
-                    requireActivity().finish()
-                    return@launch
-                }
+                // Получаем направления
+                programs = Supabase.client.from("programs")
+                    .select().decodeList<Program>()
 
-                val userId = user.id
-                val userProfile = Supabase.client.from("users")
-                    .select {
-                        filter { eq("id", userId) }
-                    }
-                    .decodeSingleOrNull<User>()
+                val adapter = ArrayAdapter(
+                    requireContext(),
+                    android.R.layout.simple_spinner_item,
+                    programs.map { it.name + "-" + it.code }
+                )
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                binding.studyFieldSpinner.adapter = adapter
 
-                if (userProfile != null) {
-                    // Установка данных в EditText и Spinner
-                    binding.fullNameEditText.setText(userProfile.fullname)
-                    binding.courseEditText.setText(userProfile.course)
+                // Загружаем профиль пользователя
+                loadUserProfile()
 
-                    // Установка текущего направления в Spinner
-                    val studyFieldIndex = studyFields.indexOf(userProfile.studyfield)
-                    if (studyFieldIndex != -1) {
-                        binding.studyFieldSpinner.setSelection(studyFieldIndex)
-                    } else {
-                        Toast.makeText(requireContext(), "Текущее направление не в списке", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    Toast.makeText(requireContext(), "Данные профиля не найдены", Toast.LENGTH_SHORT).show()
-                    println("Профиль не найден для userId: $userId")
-                }
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Ошибка загрузки данных: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Ошибка загрузки направлений: ${e.message}", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
             }
         }
     }
 
-    /** Сохранение изменений профиля */
-    private fun saveProfileChanges() {
-        val fullName = binding.fullNameEditText.text.toString().trim()
-        val studyField = binding.studyFieldSpinner.selectedItem?.toString()
-        val courseText = binding.courseEditText.text.toString().trim()
-
-        // Проверка на пустые поля
-        if (fullName.isEmpty() || studyField.isNullOrEmpty() || courseText.isEmpty()) {
-            Toast.makeText(requireContext(), "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Валидация курса
-        val course = courseText.toIntOrNull()
-        if (course == null || course !in 1..6) {
-            Toast.makeText(requireContext(), "Некорректный курс (должен быть 1-6)", Toast.LENGTH_SHORT).show()
-            return
-        }
-
+    private fun loadUserProfile() {
         lifecycleScope.launch {
             try {
                 val user = Supabase.client.auth.currentUserOrNull()
@@ -147,26 +94,79 @@ class ProfileFragment : Fragment() {
                     return@launch
                 }
 
-                // Получаем текущие данные профиля
-                val currentProfile = Supabase.client.from("users")
-                    .select {
-                        filter { eq("id", user.id) }
-                    }
-                    .decodeSingle<User>()
+                val userProfile = Supabase.client.from("users")
+                    .select { filter { eq("id", user.id) } }
+                    .decodeSingleOrNull<User>()
 
-                // Обновляем профиль
-                val updatedProfile = currentProfile.copy(
+                if (userProfile != null) {
+                    binding.fullNameEditText.setText(userProfile.fullname)
+                    binding.courseEditText.setText(userProfile.course)
+
+                    // Установим выбранное направление по program_id
+                    val selectedIndex = programs.indexOfFirst { it.id == userProfile.program_id }
+                    if (selectedIndex != -1) {
+                        binding.studyFieldSpinner.setSelection(selectedIndex)
+                    }
+
+
+                } else {
+                    Toast.makeText(requireContext(), "Данные профиля не найдены", Toast.LENGTH_SHORT).show()
+                }
+
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Ошибка загрузки профиля: ${e.message}", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun saveProfileChanges() {
+        val fullName = binding.fullNameEditText.text.toString().trim()
+        val course = binding.courseEditText.text.toString().trim()
+
+        if (fullName.isEmpty() || course.isEmpty()) {
+            Toast.makeText(requireContext(), "Все поля должны быть заполнены", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val courseInt = course.toIntOrNull()
+        if (courseInt == null || courseInt !in 1..6) {
+            Toast.makeText(requireContext(), "Некорректный курс (1-6)", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val selectedIndex = binding.studyFieldSpinner.selectedItemPosition
+        if (selectedIndex == -1 || selectedIndex >= programs.size) {
+            Toast.makeText(requireContext(), "Выберите направление", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val selectedProgram = programs[selectedIndex]
+
+        lifecycleScope.launch {
+            try {
+                val user = Supabase.client.auth.currentUserOrNull()
+                if (user == null) {
+                    Toast.makeText(requireContext(), "Пользователь не найден", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val updatedUser = User(
+                    id = user.id,
+                    email = user.email ?: "",
                     fullname = fullName,
-                    studyfield = studyField,
-                    course = course.toString()
+                    program_id = selectedProgram.id,
+                    course = course,
+                    profileCompleted = true
                 )
 
-                Supabase.client.from("users").update(updatedProfile) {
+                Supabase.client.from("users").update(updatedUser) {
                     filter { eq("id", user.id) }
                 }
 
-                Toast.makeText(requireContext(), "Профиль успешно обновлен", Toast.LENGTH_SHORT).show()
-                loadStudentData() // Обновляем данные на экране
+                Toast.makeText(requireContext(), "Профиль обновлён", Toast.LENGTH_SHORT).show()
+                loadUserProfile()
+
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Ошибка обновления: ${e.message}", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
