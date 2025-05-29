@@ -10,4 +10,7 @@
     <color name="primaryLight">#C5CAE9</color>
     <color name="white">#FFFFFF</color>
     <color name="backgroundColor">#6200EE</color>
+    <color name="purple_200">#BB86FC</color>
+    <color name="teal_700">#018786</color>
+
 </resources>

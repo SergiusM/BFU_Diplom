@@ -6,12 +6,8 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.view.*
+import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -26,6 +22,9 @@ class MaterialsFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val sessionManager by lazy { SessionManager(requireContext()) }
+
+    private lateinit var allSubjects: List<Subject>
+    private lateinit var allMaterials: List<MaterialLite>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -59,23 +58,23 @@ class MaterialsFragment : Fragment() {
                     return@launch
                 }
 
-                val allMaterials = Supabase.client.from("materials")
+                allMaterials = Supabase.client.from("materials")
                     .select()
                     .decodeList<MaterialLite>()
 
-                val filteredMaterials = allMaterials.filter {
+                allSubjects = Supabase.client.from("subjects")
+                    .select()
+                    .decodeList<Subject>()
+
+                val filteredSubjects = allSubjects.filter {
                     it.program_id == user.program_id && it.course == user.course?.toIntOrNull()
-                }.mapNotNull {
-                    val fileName = it.file_name
-                    val link = it.link
-                    if (fileName != null && link != null) SimpleMaterial(fileName, link) else null
                 }
 
-                if (filteredMaterials.isEmpty()) {
-                    Toast.makeText(requireContext(), "Материалы не найдены", Toast.LENGTH_SHORT).show()
-                } else {
-                    showMaterials(filteredMaterials)
+                val filteredMaterials = allMaterials.filter {
+                    it.program_id == user.program_id && it.course == user.course?.toIntOrNull()
                 }
+
+                showSubjectButtons(filteredSubjects, filteredMaterials)
 
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -84,15 +83,69 @@ class MaterialsFragment : Fragment() {
         }
     }
 
-    data class SimpleMaterial(
-        val fileName: String,
-        val link: String
-    )
-
-    private fun showMaterials(materials: List<SimpleMaterial>) {
+    private fun showSubjectButtons(subjects: List<Subject>, materials: List<MaterialLite>) {
         val context = requireContext()
         binding.materialContainer.removeAllViews()
 
+        for (subject in subjects) {
+            val button = TextView(context).apply {
+                text = subject.name
+                textSize = 18f
+                setTextColor(Color.WHITE)
+                setBackgroundColor(ContextCompat.getColor(context, R.color.teal_700))
+                setPadding(32, 24, 32, 24)
+                setTypeface(null, Typeface.BOLD)
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(16, 16, 16, 16)
+                }
+
+                setOnClickListener {
+                    val subjectMaterials = materials.filter { it.subject_id == subject.id }
+                    showMaterials(subject.name, subjectMaterials)
+                }
+            }
+
+            binding.materialContainer.addView(button)
+        }
+    }
+
+
+    private fun showMaterials(subjectName: String, materials: List<MaterialLite>) {
+        val context = requireContext()
+        binding.materialContainer.removeAllViews()
+
+        // Добавим заголовок
+        val header = TextView(context).apply {
+            text = "Материалы по предмету: $subjectName"
+            textSize = 20f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.BLACK)
+            setPadding(32, 16, 32, 16)
+        }
+        binding.materialContainer.addView(header)
+
+        // Кнопка "Назад к предметам"
+        val backButton = Button(context).apply {
+            text = "← Назад к предметам"
+            setBackgroundColor(ContextCompat.getColor(context, R.color.purple_200))
+            setTextColor(Color.WHITE)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(32, 16, 32, 32)
+            }
+
+            setOnClickListener {
+                showSubjectButtons(allSubjects, allMaterials)
+            }
+        }
+        binding.materialContainer.addView(backButton)
+
+        // Показываем материалы
         for (material in materials) {
             val cardView = MaterialCardView(context).apply {
                 layoutParams = LinearLayout.LayoutParams(
@@ -104,14 +157,6 @@ class MaterialsFragment : Fragment() {
                 radius = 24f
                 elevation = 8f
                 setCardBackgroundColor(ContextCompat.getColor(context, R.color.white))
-                setOnClickListener {
-                    try {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(material.link))
-                        startActivity(intent)
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Не удалось открыть ссылку", Toast.LENGTH_SHORT).show()
-                    }
-                }
             }
 
             val layout = LinearLayout(context).apply {
@@ -119,15 +164,22 @@ class MaterialsFragment : Fragment() {
                 setPadding(32, 32, 32, 32)
             }
 
-            val fileNameText = TextView(context).apply {
-                text = "Материал: ${material.fileName}"
+            val titleText = TextView(context).apply {
+                text = "Материал: ${material.file_name ?: "Без названия"}"
                 textSize = 16f
-                setTextColor(Color.DKGRAY)
-                setTypeface(null, Typeface.BOLD)
+                setTextColor(Color.BLACK)
             }
 
-            layout.addView(fileNameText)
+            layout.addView(titleText)
             cardView.addView(layout)
+
+            cardView.setOnClickListener {
+                material.link?.let { url ->
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    startActivity(intent)
+                }
+            }
+
             binding.materialContainer.addView(cardView)
         }
     }
