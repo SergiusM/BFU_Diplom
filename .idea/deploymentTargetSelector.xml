@@ -2,12 +2,12 @@
 <project version="4">
   <component name="deploymentTargetSelector">
     <selectionStates>
-      <SelectionState runConfigName="app">
+      <SelectionState runConfigName="Test_for_diplom.app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-05-25T12:50:49.928038Z">
+        <DropdownSelection timestamp="2025-05-29T08:50:55.028856900Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="Default" identifier="serial=emulator-5554;connection=c38559d5" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\gboldyrev\.android\avd\Pixel_8_3.avd" />
             </handle>
           </Target>
         </DropdownSelection>
