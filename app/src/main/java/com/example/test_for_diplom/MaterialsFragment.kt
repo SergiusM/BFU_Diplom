@@ -1,59 +1,139 @@
+
 package com.example.test_for_diplom
 
+import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
+import com.example.test_for_diplom.databinding.FragmentMaterialBinding
+import com.google.android.material.card.MaterialCardView
+import io.github.jan.supabase.postgrest.from
+import kotlinx.coroutines.launch
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [MaterialsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class MaterialsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private var _binding: FragmentMaterialBinding? = null
+    private val binding get() = _binding!!
+
+    private val sessionManager by lazy { SessionManager(requireContext()) }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_materials, container, false)
+    ): View {
+        _binding = FragmentMaterialBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MaterialsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            MaterialsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        loadMaterials()
+    }
+
+    private fun loadMaterials() {
+        lifecycleScope.launch {
+            try {
+                val userId = sessionManager.getUserId()
+                if (userId == null) {
+                    Toast.makeText(requireContext(), "Пользователь не найден", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val user = Supabase.client.from("users")
+                    .select()
+                    .decodeList<User>()
+                    .find { it.id == userId }
+
+                if (user == null) {
+                    Toast.makeText(requireContext(), "Профиль пользователя не найден", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val allMaterials = Supabase.client.from("materials")
+                    .select()
+                    .decodeList<MaterialLite>()
+
+                val filteredMaterials = allMaterials.filter {
+                    it.program_id == user.program_id && it.course == user.course?.toIntOrNull()
+                }.mapNotNull {
+                    val fileName = it.file_name
+                    val link = it.link
+                    if (fileName != null && link != null) SimpleMaterial(fileName, link) else null
+                }
+
+                if (filteredMaterials.isEmpty()) {
+                    Toast.makeText(requireContext(), "Материалы не найдены", Toast.LENGTH_SHORT).show()
+                } else {
+                    showMaterials(filteredMaterials)
+                }
+
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Ошибка: ${e.message}", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
+            }
+        }
+    }
+
+    data class SimpleMaterial(
+        val fileName: String,
+        val link: String
+    )
+
+    private fun showMaterials(materials: List<SimpleMaterial>) {
+        val context = requireContext()
+        binding.materialContainer.removeAllViews()
+
+        for (material in materials) {
+            val cardView = MaterialCardView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    setMargins(16, 16, 16, 16)
+                }
+                radius = 24f
+                elevation = 8f
+                setCardBackgroundColor(ContextCompat.getColor(context, R.color.white))
+                setOnClickListener {
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(material.link))
+                        startActivity(intent)
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Не удалось открыть ссылку", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
+
+            val layout = LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(32, 32, 32, 32)
+            }
+
+            val fileNameText = TextView(context).apply {
+                text = "Материал: ${material.fileName}"
+                textSize = 16f
+                setTextColor(Color.DKGRAY)
+                setTypeface(null, Typeface.BOLD)
+            }
+
+            layout.addView(fileNameText)
+            cardView.addView(layout)
+            binding.materialContainer.addView(cardView)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

@@ -41,7 +41,7 @@
         android:id="@+id/materialsFragment"
         android:name="com.example.test_for_diplom.MaterialsFragment"
         android:label="Учебные материалы"
-        tools:layout="@layout/fragment_materials">
+        tools:layout="@layout/fragment_material">
         <action
             android:id="@+id/action_materials_to_schedule"
             app:destination="@id/scheduleFragment" />

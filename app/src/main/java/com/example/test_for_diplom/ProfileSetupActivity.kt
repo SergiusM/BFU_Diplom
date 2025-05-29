@@ -106,7 +106,7 @@ class ProfileSetupActivity : AppCompatActivity() {
         val course = binding.courseEditText.text.toString().trim()
         val selected = selectedProgram
 
-        if (fullName.isEmpty()  || course.isEmpty() || selected == null) {
+        if (fullName.isEmpty() || course.isEmpty() || selected == null) {
             Toast.makeText(this, "Пожалуйста, заполните все поля", Toast.LENGTH_SHORT).show()
             return
         }
@@ -128,7 +128,6 @@ class ProfileSetupActivity : AppCompatActivity() {
                     return@launch
                 }
 
-
                 val userProfile = User(
                     id = user.id,
                     email = user.email ?: "",
@@ -139,12 +138,18 @@ class ProfileSetupActivity : AppCompatActivity() {
                 )
 
                 Supabase.client.from("users").upsert(userProfile)
+
+                // ✅ Сохраняем userId в SessionManager
+                val sessionManager = SessionManager(applicationContext)
+                sessionManager.saveUserId(user.id)
+
                 Toast.makeText(this@ProfileSetupActivity, "Профиль сохранён", Toast.LENGTH_SHORT).show()
 
                 startActivity(Intent(this@ProfileSetupActivity, Activity_Frag::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 })
                 finish()
+
             } catch (e: Exception) {
                 Toast.makeText(this@ProfileSetupActivity, "Ошибка сохранения: ${e.message}", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
