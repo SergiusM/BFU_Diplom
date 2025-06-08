@@ -9,7 +9,7 @@
         android:id="@+id/scheduleFragment"
         android:name="com.example.test_for_diplom.ScheduleFragment"
         android:label="Расписание"
-        tools:layout="@layout/schedule_fragment">
+        tools:layout="@layout/fragment_schedule">
         <action
             android:id="@+id/action_schedule_to_aiChat"
             app:destination="@id/aiChatFragment" />

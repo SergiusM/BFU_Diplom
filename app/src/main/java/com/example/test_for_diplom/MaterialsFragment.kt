@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.*
 import androidx.core.content.ContextCompat
+import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.test_for_diplom.databinding.FragmentMaterialBinding
@@ -90,16 +91,17 @@ class MaterialsFragment : Fragment() {
         for (subject in subjects) {
             val button = TextView(context).apply {
                 text = subject.name
-                textSize = 18f
+                textSize = 16f
                 setTextColor(Color.WHITE)
-                setBackgroundColor(ContextCompat.getColor(context, R.color.teal_700))
-                setPadding(32, 24, 32, 24)
                 setTypeface(null, Typeface.BOLD)
+                setBackgroundColor(Color.parseColor("#6B48FF"))
+                background = ContextCompat.getDrawable(context, R.drawable.rounded_purple_button)
+                setPadding(40)
                 layoutParams = LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    setMargins(16, 16, 16, 16)
+                    setMargins(32, 24, 32, 0)
                 }
 
                 setOnClickListener {
@@ -108,16 +110,16 @@ class MaterialsFragment : Fragment() {
                 }
             }
 
+
             binding.materialContainer.addView(button)
         }
     }
-
 
     private fun showMaterials(subjectName: String, materials: List<MaterialLite>) {
         val context = requireContext()
         binding.materialContainer.removeAllViews()
 
-        // Добавим заголовок
+        // Заголовок
         val header = TextView(context).apply {
             text = "Материалы по предмету: $subjectName"
             textSize = 20f
@@ -127,11 +129,14 @@ class MaterialsFragment : Fragment() {
         }
         binding.materialContainer.addView(header)
 
-        // Кнопка "Назад к предметам"
-        val backButton = Button(context).apply {
+        // Кнопка Назад
+        val backButton = TextView(context).apply {
             text = "← Назад к предметам"
-            setBackgroundColor(ContextCompat.getColor(context, R.color.purple_200))
+            textSize = 16f
             setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+            background = ContextCompat.getDrawable(context, R.drawable.rounded_purple_button)
+            setPadding(40)
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
@@ -145,7 +150,7 @@ class MaterialsFragment : Fragment() {
         }
         binding.materialContainer.addView(backButton)
 
-        // Показываем материалы
+        // Карточки материалов
         for (material in materials) {
             val cardView = MaterialCardView(context).apply {
                 layoutParams = LinearLayout.LayoutParams(

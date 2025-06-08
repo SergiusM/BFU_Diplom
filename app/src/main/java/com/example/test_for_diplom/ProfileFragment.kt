@@ -1,13 +1,18 @@
+
 @file:OptIn(InternalSerializationApi::class)
+
 package com.example.test_for_diplom
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.test_for_diplom.databinding.FragmentProfileBinding
@@ -15,9 +20,14 @@ import io.github.jan.supabase.gotrue.auth
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.launch
 import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import com.example.test_for_diplom.Program
+
+import android.graphics.drawable.GradientDrawable
+
+import android.view.Gravity
+
+import android.widget.Button
+import android.widget.LinearLayout
 
 
 class ProfileFragment : Fragment() {
@@ -26,6 +36,15 @@ class ProfileFragment : Fragment() {
     private val binding get() = _binding!!
 
     private var programs: List<Program> = emptyList()
+
+    @Serializable
+    data class GroupLink(
+        val id: Int,
+        val link: String,
+        val title: String,
+        val course: Int? = null,
+        val program_id: Int? = null
+    )
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,7 +57,6 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Загрузка направлений и профиля
         loadProgramsAndProfile()
 
         binding.saveButton.setOnClickListener {
@@ -63,7 +81,6 @@ class ProfileFragment : Fragment() {
     private fun loadProgramsAndProfile() {
         lifecycleScope.launch {
             try {
-                // Получаем направления
                 programs = Supabase.client.from("programs")
                     .select().decodeList<Program>()
 
@@ -75,7 +92,6 @@ class ProfileFragment : Fragment() {
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 binding.studyFieldSpinner.adapter = adapter
 
-                // Загружаем профиль пользователя
                 loadUserProfile()
 
             } catch (e: Exception) {
@@ -102,12 +118,14 @@ class ProfileFragment : Fragment() {
                     binding.fullNameEditText.setText(userProfile.fullname)
                     binding.courseEditText.setText(userProfile.course)
 
-                    // Установим выбранное направление по program_id
                     val selectedIndex = programs.indexOfFirst { it.id == userProfile.program_id }
                     if (selectedIndex != -1) {
                         binding.studyFieldSpinner.setSelection(selectedIndex)
                     }
 
+
+                    val courseInt = userProfile.course.toIntOrNull()
+                    loadGroupLinks(userProfile.program_id, courseInt)
 
                 } else {
                     Toast.makeText(requireContext(), "Данные профиля не найдены", Toast.LENGTH_SHORT).show()
@@ -115,6 +133,70 @@ class ProfileFragment : Fragment() {
 
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "Ошибка загрузки профиля: ${e.message}", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun loadGroupLinks(programId: Int?, course: Int?) {
+        lifecycleScope.launch {
+            try {
+                val allLinks = Supabase.client.from("group_links")
+                    .select().decodeList<GroupLink>()
+
+                val filteredLinks = allLinks.filter {
+                    (it.program_id == null || it.program_id == programId) &&
+                            (it.course == null || it.course == course)
+                }
+
+                binding.linksContainer.removeAllViews()
+
+                for (link in filteredLinks) {
+                    val button = Button(requireContext()).apply {
+                        text = link.title
+                        textSize = 16f
+                        setTextColor(ContextCompat.getColor(context, android.R.color.black))
+                        setBackgroundColor(ContextCompat.getColor(context, android.R.color.white))
+                        setPadding(32, 16, 32, 16)
+                        isAllCaps = false
+
+                        // Скруглённые углы и тень через backgroundDrawable
+                        background = GradientDrawable().apply {
+                            shape = GradientDrawable.RECTANGLE
+                            cornerRadius = 24f
+                            setColor(ContextCompat.getColor(context, android.R.color.white))
+                            setStroke(2, ContextCompat.getColor(context, android.R.color.darker_gray))
+                        }
+
+                        // Центровка и отступы
+                        layoutParams = LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                        ).apply {
+                            gravity = Gravity.CENTER
+                            setMargins(16, 16, 16, 16)
+                        }
+
+                        setOnClickListener {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link.link))
+                            startActivity(intent)
+                        }
+                    }
+
+                    binding.linksContainer.addView(button)
+                }
+
+                if (filteredLinks.isEmpty()) {
+                    val emptyText = TextView(requireContext()).apply {
+                        text = "Ссылки на беседы отсутствуют"
+                        textSize = 14f
+                        setPadding(0, 8, 0, 8)
+                    }
+                    binding.linksContainer.addView(emptyText)
+                }
+
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "Ошибка загрузки ссылок: ${e.message}", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
             }
         }
@@ -163,6 +245,7 @@ class ProfileFragment : Fragment() {
                 Supabase.client.from("users").update(updatedUser) {
                     filter { eq("id", user.id) }
                 }
+
 
                 Toast.makeText(requireContext(), "Профиль обновлён", Toast.LENGTH_SHORT).show()
                 loadUserProfile()
